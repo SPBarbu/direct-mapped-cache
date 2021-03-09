@@ -9,7 +9,7 @@ architecture behavior of cache_tb is
 
 component cache is
 generic(
-    ram_size : INTEGER := 32768;
+    ram_size : INTEGER := 32768
 );
 port(
     clock : in std_logic;
@@ -114,9 +114,105 @@ end process;
 
 test_process : process
 begin
-
--- put your tests here
+  s_write <= '0';
+  s_read <= '0';
+  
+  reset <= '1';
+  wait for clk_period;
+  reset <= '0';
+  wait for clk_period;
+  
+  report "Test 1: Populating cache.  Either non-valid block or valid, but hit miss. (0000, 0001, 0010, 0100, 0110)";
+	s_addr <= "11111111111111111111111111111111";
+	s_read <= '1';
+	s_write <= '0';
+	wait until falling_edge(s_waitrequest);
+	assert s_readdata = X"FFFEFDFC" report "Unsuccessful read" severity error;
+	s_write <= '0';
+  s_read <= '0';
+	wait until rising_edge(s_waitrequest);
 	
+	report "Test 2: Reading valid block, cache hit (0101, 0111)";
+	s_addr <= "00000000000000000111111111111000"; -- same block as test 1 but 3rd word rather than 4th
+	s_read <= '1';
+	s_write <= '0';
+	wait until falling_edge(s_waitrequest);
+	assert s_readdata = X"FBFAF9F8" report "Unsuccessfully populated" severity error;
+	s_write <= '0';
+  s_read <= '0';
+	wait until rising_edge(s_waitrequest);
+	
+	report "Test 3: Writing to cache on a populate block, valid cache hit(1101, 1111)";
+	s_addr <= "11111111111111111111111111111000"; -- same block as test 2
+	s_read <= '0';
+	s_write <= '1';
+	s_writedata <=  X"FFFFFFFF";
+	wait until falling_edge(s_waitrequest);
+	s_write <= '0';
+  s_read <= '0';
+	wait until rising_edge(s_waitrequest);
+	s_read <= '1';
+	s_write <= '0';
+	wait until falling_edge(s_waitrequest);
+	assert s_readdata = X"FFFFFFFF" report "Unsuccessful write" severity error;
+  s_write <= '0';
+  s_read <= '0';
+	wait until rising_edge(s_waitrequest);
+	
+	report "Test 4: Reading dirty block on cache miss. Writing back to memory. (0011, 1011)";
+	s_addr <= "11111111111111111011111111111000"; -- same index as test3 so know it's dirty, but different tag so hit miss
+	s_read <= '1';
+	s_write <= '0';
+	wait until falling_edge(s_waitrequest);
+	assert s_readdata = X"FBFAF9F8" report "Unsuccessful read" severity error;
+	s_write <= '0';
+  s_read <= '0';
+	wait until rising_edge(s_waitrequest);
+	s_addr <= "11111111111111111111111111111000"; -- bring back previous data so know it was saved  to memory
+	s_read <= '1';
+	s_write <= '0';
+	wait until falling_edge(s_waitrequest);
+	assert s_readdata = X"FFFFFFFF" report "Unsuccessfully saved to memory" severity error;
+	s_write <= '0';
+  s_read <= '0';
+	wait until rising_edge(s_waitrequest);
+	
+	report "Test 5: Populating before writing. Either non-valid block or valid, but hit miss and not dirty. (1000, 1001, 1010, 1100, 1110)";
+	s_addr <= "11111111111111111111111111101100";
+	s_read <= '0';
+	s_write <= '1';
+	s_writedata <=  X"FFFFFFFF";
+	wait until falling_edge(s_waitrequest);
+	assert s_readdata = X"FFFFFFFF" report "Unsuccessful write" severity error;
+  s_write <= '0';
+  s_read <= '0';
+	wait until rising_edge(s_waitrequest);
+	s_addr <= "11111111111111111111111111101000"; -- same block as before but 3rd word rather than 4th
+	s_read <= '1';
+	s_write <= '0';
+	wait until falling_edge(s_waitrequest);
+	assert s_readdata = "11101011111010101110100111101000" report "Unsuccessfully populated" severity error;
+  s_write <= '0';
+  s_read <= '0';
+	wait until rising_edge(s_waitrequest);
+	
+	reset <= '1';
+  wait for clk_period;
+  reset <= '0';
+  wait for clk_period;
+  
+  report "Test 6: Testing reset";
+	s_addr <= "11111111111111111111111111101100";
+	s_read <= '1';
+	s_write <= '0';
+	wait until falling_edge(s_waitrequest);
+	assert s_readdata = "11101111111011101110110111101100" report "Unsuccessful read" severity error;
+	s_write <= '0';
+  s_read <= '0';
+	wait until rising_edge(s_waitrequest);
+	
+	report "Confirming all tests have ran";
+	wait;
 end process;
 	
 end;
