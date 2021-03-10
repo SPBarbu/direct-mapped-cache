@@ -1,20 +1,16 @@
-#proc AddWaves {} {
-#	;#Add waves we're interested in to the Wave window
-#	
-#	add wave -position end sim:/cache_tb/clk 
-#	add wave -position end sim:/cache_tb/reset
-#	add wave -position end sim:/cache_tb/s_addr
-#	add wave -position end sim:/cache_tb/s_read
-#	add wave -position end sim:/cache_tb/s_readdata
-#	add wave -position end sim:/cache_tb/s_write
-#	add wave -position end sim:/cache_tb/s_writedata
-#	add wave -position end sim:/cache_tb/s_waitrequest
-#
-##    add wave -position end sim:/fsm_tb/clk
-##    add wave -position end sim:/fsm_tb/s_reset
-##    add wave -position end sim:/fsm_tb/s_input
-##    add wave -position end sim:/fsm_tb/s_output
-#}
+proc AddWaves {} {
+	;#Add waves we're interested in to the Wave window
+	
+	add wave -position end sim:/cache_tb/clk 
+	add wave -position end sim:/cache_tb/reset
+	add wave -position end sim:/cache_tb/s_addr
+	add wave -position end sim:/cache_tb/s_read
+	add wave -position end sim:/cache_tb/s_readdata
+	add wave -position end sim:/cache_tb/s_write
+	add wave -position end sim:/cache_tb/s_writedata
+	add wave -position end sim:/cache_tb/s_waitrequest
+
+}
 
 vlib work
 
@@ -31,8 +27,8 @@ vsim cache_tb
 force -deposit clk 0 0 ns, 1 0.5 ns -repeat 1 ns
 
 ;# Add the waves
-#AddWaves
+AddWaves
 
-;# Run for 50 ns
+;# Run for 1200 ns
 run 1200ns
 
